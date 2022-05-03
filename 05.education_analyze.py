@@ -16,8 +16,7 @@ import seaborn as sns
 labor=pd.read_csv("cleaned_labor.csv", index_col="Occupation", thousands=",")
 
 #  Creating a dataframe from the csv file, which composed of two columns: 
-#  "Employment Change" and "Education level". These are the only columns
-#  which will be needed for this analysis. Then grouping this dataframe by 
+#  "Employment Change" and "Education level". Then grouping this dataframe by 
 #  educational level and calculating how many jobs will be created in 2030
 #  for each educational level.
 
@@ -71,12 +70,25 @@ ax1.set_ylabel("")
 fig.tight_layout()
 fig.savefig("fig7_education_percentages.png")
 
+#  Creating a dataframe from the initial csv file, which composed of two 
+#  columns: "Job_Openings_Yearly" and "Education level". Then grouping this 
+#  dataframe by educational level and calculating how many job openings will be 
+#  created from 2021 to 2030 for each educational level by multiplying the 
+#  number of job openings by 10, because the job openings column represent the
+#  annual average job openings from 2021 to 2030. Job openings include the 
+#  new created jobs, as well as the new hires because of quits, layoffs, 
+#  discharges, retirement, death, disability, transfers, etc.
+
+group_job_openings=labor[['Job_Openings_Yearly','Educ_Level']].assign().groupby(['Educ_Level'])
+grouped_job_openings=round(group_job_openings.sum()*10).sort_values(by="Job_Openings_Yearly")
+
 #  Reading a csv file for education, which will be Panda's DataFrame object, 
-#  and then merging that data with the grouped dataframe created above to make
-#  comparison. Then dropping the merged column, which is not useful here.
+#  and then merging that data with the grouped job openings dataframe created 
+#  above to make comparison. Then dropping the merged column, which is not 
+#  useful here.
 
 education=pd.read_csv("cleaned_education.csv")
-educ=grouped_educ_change.merge(education,
+educ=grouped_job_openings.merge(education,
                      left_on="Educ_Level", 
                      right_on="Award level",
                      how="inner",
@@ -84,51 +96,61 @@ educ=grouped_educ_change.merge(education,
                      indicator=True)
 educ=educ.set_index("Award level").drop(columns="_merge")
 
+
 #  Now calculating the difference between the number of projected degrees 
-#  awarded 2021-2030 and the number of degress required to fill the growing 
-#  number of jobs from 2020  to 2030. The calculation is done both for absolute 
+#  awarded 2021-2030 and the number of degress required to fill the job 
+#  openings from 2021  to 2030. The calculation is done both for absolute 
 #  and percentage values.
 
-educ["Degree_Diff"]=educ["Degrees"]-educ["Emp_Change"]
+educ["Degree_Diff"]=educ["Degrees"]-educ["Job_Openings_Yearly"]
 educ["Degree_Diff_P"]=round(educ["Degree_Diff"]*100/educ["Degrees"])
 educ=educ.sort_values(by=["Degree_Diff_P"])
 
+#  Caluclating and printing the total number of degree shortage for 2021-2030
+
+print(educ["Degree_Diff"].sum())
+
 #  Finally creating a two two-panel figures to show the contrast of the 
 #  projected number of future degrees and the total number of degrees needed
-#  to fill the jobs in the future. And the second figure shows the demand for 
-#  additional degrees in 2030 in absolute numbers and percentages.
+#  to fill the job openings within the future 10-year period. 
+#  This figure shows the awarded degfrees from 2021-2030 (available number of
+#  degress) and the required number of degrees to fill the job openings from 
+#  2021 to 2030.
 
 fig,(ax1,ax2)=plt.subplots(1,2,dpi=300)
-fig.suptitle("Available and Required Number of Degrees to fill new jobs for 2020-2030, Thousands")
+fig.suptitle("Available and Required Number of Degrees (2021-2030)")
 educ["Degrees"].plot.bar(ax=ax1, fontsize=7, color=["lightcyan","paleturquoise","lightseagreen","darkcyan"])
-ax1.set_xlabel("AVAILABLE")
+ax1.set_xlabel("AVAILABLE (thousands)")
 ax1.annotate(round(educ["Degrees"][0]),(0.3,2600),textcoords="offset points",xytext=(0,0),ha="right")
-ax1.annotate(round(educ["Degrees"][1]),(1.4,12000),textcoords="offset points",xytext=(0,0),ha="right")
+ax1.annotate(round(educ["Degrees"][1]),(1.25,2500),textcoords="offset points",xytext=(0,0),ha="right")
 ax1.annotate(round(educ["Degrees"][2]),(2.3,8800),textcoords="offset points",xytext=(0,0),ha="right")
 ax1.annotate(round(educ["Degrees"][3]),(3.35,11000),textcoords="offset points",xytext=(0,0),ha="right")
-educ["Emp_Change"].plot.bar(ax=ax2, fontsize=7, color=["lightcyan","paleturquoise","lightseagreen","darkcyan"])
-ax2.set_xlabel("REQUIRED")
-ax2.annotate(round(educ["Emp_Change"][0]),(0,500),textcoords="offset points",xytext=(0,0),ha="center")
-ax2.annotate(round(educ["Emp_Change"][1]),(1,700),textcoords="offset points",xytext=(0,0),ha="center")
-ax2.annotate(round(educ["Emp_Change"][2]),(2,550),textcoords="offset points",xytext=(0,0),ha="center")
-ax2.annotate(round(educ["Emp_Change"][3]),(3,430),textcoords="offset points",xytext=(0,0),ha="center")
+educ["Job_Openings_Yearly"].plot.bar(ax=ax2, fontsize=7, color=["lightcyan","paleturquoise","lightseagreen","darkcyan"])
+ax2.set_xlabel("REQUIRED (thousands)")
+ax2.annotate(round(educ["Job_Openings_Yearly"][0]),(0,5000),textcoords="offset points",xytext=(0,0),ha="center")
+ax2.annotate(round(educ["Job_Openings_Yearly"][1]),(1,4000),textcoords="offset points",xytext=(0,0),ha="center")
+ax2.annotate(round(educ["Job_Openings_Yearly"][2]),(2,3800),textcoords="offset points",xytext=(0,0),ha="center")
+ax2.annotate(round(educ["Job_Openings_Yearly"][3]),(3,4500),textcoords="offset points",xytext=(0,0),ha="center")
 fig.tight_layout()
 fig.savefig("fig8_degree_supply_demand.png")
 
+#  This second figure shows the difference between the availaable and required 
+#  number of degrees from 2021 to 2030 in absolute numbers and percentages,i.e.
+#  it shows the degree demand and shortage.
 
 fig,(ax1,ax2)=plt.subplots(1,2,dpi=300)
-fig.suptitle("Degree Surplus for 2020-2030")
+fig.suptitle("Degree Shortage/Surplus for 2021-2030")
 educ["Degree_Diff"].plot.bar(ax=ax1, fontsize=7, color=["lightsteelblue","cornflowerblue","royalblue","midnightblue"])
 ax1.set_xlabel("THOUSANDS")
-ax1.annotate(round(educ["Degree_Diff"][0]),(0.3,2000),textcoords="offset points",xytext=(0,0),ha="right")
-ax1.annotate(round(educ["Degree_Diff"][1]),(1.35,11000),textcoords="offset points",xytext=(0,0),ha="right")
-ax1.annotate(round(educ["Degree_Diff"][2]),(2.3,8200),textcoords="offset points",xytext=(0,0),ha="right")
-ax1.annotate(round(educ["Degree_Diff"][3]),(3.3,10550),textcoords="offset points",xytext=(0,0),ha="right")
+ax1.annotate(round(educ["Degree_Diff"][0]),(0.4,-13000),textcoords="offset points",xytext=(0,0),ha="right")
+ax1.annotate(round(educ["Degree_Diff"][1]),(1.35,-3000),textcoords="offset points",xytext=(0,0),ha="right")
+ax1.annotate(round(educ["Degree_Diff"][2]),(2.3,-3000),textcoords="offset points",xytext=(0,0),ha="right")
+ax1.annotate(round(educ["Degree_Diff"][3]),(3.3,-3000),textcoords="offset points",xytext=(0,0),ha="right")
 educ["Degree_Diff_P"].plot.bar(ax=ax2, fontsize=7, color=["lightsteelblue","cornflowerblue","royalblue","midnightblue"])
 ax2.set_xlabel("PERCENTAGES")
-ax2.annotate(round(educ["Degree_Diff_P"][0]),(0,80),textcoords="offset points",xytext=(0,0),ha="center")
-ax2.annotate(round(educ["Degree_Diff_P"][1]),(1,82),textcoords="offset points",xytext=(0,0),ha="center")
-ax2.annotate(round(educ["Degree_Diff_P"][2]),(2,83),textcoords="offset points",xytext=(0,0),ha="center", color="white")
-ax2.annotate(round(educ["Degree_Diff_P"][3]),(3,84),textcoords="offset points",xytext=(0,0),ha="center",color="white")
+ax2.annotate(round(educ["Degree_Diff_P"][0]),(0,-70),textcoords="offset points",xytext=(0,0),ha="center")
+ax2.annotate(round(educ["Degree_Diff_P"][1]),(1,-57),textcoords="offset points",xytext=(0,0),ha="center")
+ax2.annotate(round(educ["Degree_Diff_P"][2]),(2,50),textcoords="offset points",xytext=(0,0),ha="center", color="white")
+ax2.annotate(round(educ["Degree_Diff_P"][3]),(3,50),textcoords="offset points",xytext=(0,0),ha="center",color="white")
 fig.tight_layout()
 fig.savefig("fig9_degree_surplus.png")

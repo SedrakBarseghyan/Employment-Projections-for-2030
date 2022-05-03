@@ -20,12 +20,12 @@ print("Column names of DataFrame:",list(projection.columns))
 
 #  Dropping unnecessary columns which will not be used for this analysis. 
 
-projection=projection.drop(columns=["Occupation Code","Work Experience in a Related Occupation", 'Occupational Openings, 2020-2030 Annual Average', "Workex Code",'Education Code',"Typical on-the-job Training","trCode"])
+projection=projection.drop(columns=["Occupation Code","Work Experience in a Related Occupation", "Workex Code",'Education Code',"Typical on-the-job Training","trCode"])
 
 #  Renaming some columns of the Dataframe to make them more convenient for 
 #  our use.
 
-projection=projection.rename(columns={"Occupation Title":"Occupation","Employment 2020":"Emp_2020", "Employment 2030":"Emp_2030", "Employment Change, 2020-2030":"Emp_Change", "Employment Percent Change, 2020-2030":"Emp_Change_P","Median Annual Wage 2020":"Wage","Typical Entry-Level Education":"Educ_Level"})
+projection=projection.rename(columns={"Occupation Title":"Occupation","Employment 2020":"Emp_2020", "Employment 2030":"Emp_2030", "Employment Change, 2020-2030":"Emp_Change", "Employment Percent Change, 2020-2030":"Emp_Change_P","Median Annual Wage 2020":"Wage","Typical Entry-Level Education":"Educ_Level", 'Occupational Openings, 2020-2030 Annual Average':"Job_Openings_Yearly"})
 
 #  Shortening the names of occupations, more specifically in the "Occupation" 
 #  column deleting all the strings which come after asterics and deleting

@@ -35,7 +35,7 @@ quint_percent=100*quintiles/total
 #  quintile has the largest number of future jobs.
 
 fig,(ax1,ax2)=plt.subplots(1,2,dpi=300)
-fig.suptitle("Future Job Increase by Wage Quintiles")
+fig.suptitle("Distribution of New Created Jobs by Wage Quintiles")
 quint_percent.plot.bar(ax=ax1, fontsize=7)
 ax1.set_ylabel("Percentage")
 ax1.annotate(round(quint_percent[1]),(0.2,45),textcoords="offset points",xytext=(0,0),ha="right")
